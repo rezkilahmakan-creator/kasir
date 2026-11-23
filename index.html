@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasir Warung Acil</title>
+<style>
+body{font-family:sans-serif;margin:0;padding:12px;background:#f4f4f4}
+h2{margin:6px 0}button{font-size:16px;padding:10px;border:0;border-radius:8px;margin:3px;background:#1976d2;color:#fff}
+.b{background:#fff;color:#000;border:1px solid #ccc}.box{background:#fff;border-radius:10px;padding:10px;margin:8px 0}
+input,select{font-size:16px;padding:8px;width:100%;box-sizing:border-box;margin:3px 0}
+#mic{background:#d32f2f;width:100%;font-size:20px}.row{display:flex;justify-content:space-between;padding:4px 0}
+</style></head><body>
+<h2>Kasir Warung Acil</h2>
+<button id="mic" onclick="dengar()">🎤 Tekan & ucapkan pesanan</button>
+<div id="dengarTeks"></div>
+<div class="box"><b>Barang</b><div id="barang"></div></div>
+<div class="box"><b>Keranjang</b><div id="keranjang"></div>
+<h3>Total: <span id="total">0</span></h3>
+<select id="metode"><option>Tunai</option><option>QRIS</option><option>Transfer</option></select>
+<input id="uang" type="number" placeholder="Uang dibayar (tunai)" oninput="kembali()">
+<div>Kembalian: <b id="kembalian">0</b></div>
+<button onclick="bayar()">✅ Bayar</button><button class="b" onclick="keranjang={};tampil()">Kosongkan</button></div>
+<div class="box"><b>Tambah barang</b>
+<input id="nb" placeholder="Nama barang"><input id="hb" type="number" placeholder="Harga">
+<button onclick="tambahBarang()">Simpan barang</button></div>
+<div class="box"><b>Laporan hari ini</b><div id="lap"></div></div>
+<script>
+let barang=JSON.parse(localStorage.barang||'[{"n":"Indomie","h":3500},{"n":"Kopi","h":2000},{"n":"Air Mineral","h":4000}]');
+let jual=JSON.parse(localStorage.jual||'[]');let keranjang={};
+const rp=x=>'Rp'+x.toLocaleString('id-ID');
+const angka={satu:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9,sepuluh:10};
+function simpan(){localStorage.barang=JSON.stringify(barang);localStorage.jual=JSON.stringify(jual)}
+function tampil(){
+ document.getElementById('barang').innerHTML=barang.map((b,i)=>`<button class="b" onclick="tambah(${i},1)">${b.n}<br>${rp(b.h)}</button>`).join('');
+ let t=0;document.getElementById('keranjang').innerHTML=Object.keys(keranjang).map(i=>{let b=barang[i],q=keranjang[i];t+=b.h*q;
+  return `<div class="row">${b.n} x${q}<span>${rp(b.h*q)} <button class="b" onclick="tambah(${i},-1)">−</button></span></div>`}).join('')||'Kosong';
+ document.getElementById('total').textContent=rp(t);window.tot=t;kembali();
+ let hari=new Date().toDateString(),h=jual.filter(j=>new Date(j.w).toDateString()==hari);
+ let s=m=>h.filter(j=>j.m==m).reduce((a,j)=>a+j.t,0);
+ document.getElementById('lap').innerHTML=`Transaksi: ${h.length}<br>Tunai: ${rp(s('Tunai'))}<br>QRIS: ${rp(s('QRIS'))}<br>Transfer: ${rp(s('Transfer'))}<br><b>Total: ${rp(h.reduce((a,j)=>a+j.t,0))}</b>`;
+}
+function tambah(i,q){keranjang[i]=(keranjang[i]||0)+q;if(keranjang[i]<=0)delete keranjang[i];tampil()}
+function kembali(){let u=+document.getElementById('uang').value||0;document.getElementById('kembalian').textContent=rp(Math.max(0,u-(window.tot||0)))}
+function bayar(){if(!window.tot)return;jual.push({w:Date.now(),t:window.tot,m:document.getElementById('metode').value,isi:keranjang});
+ simpan();keranjang={};document.getElementById('uang').value='';tampil();alert('Tersimpan!')}
+function tambahBarang(){let n=nb.value.trim(),h=+hb.value;if(!n||!h)return;barang.push({n,h});simpan();nb.value=hb.value='';tampil()}
+function dengar(){
+ const S=window.SpeechRecognition||window.webkitSpeechRecognition;if(!S)return alert('Pakai Chrome ya');
+ const r=new S();r.lang='id-ID';r.onresult=e=>{let teks=e.results[0][0].transcript.toLowerCase();
+  document.getElementById('dengarTeks').textContent='Didengar: '+teks;
+  barang.forEach((b,i)=>{let re=new RegExp(b.n.toLowerCase()+'\\s*(\\d+|'+Object.keys(angka).join('|')+')?');let m=teks.match(re);
+   if(m){let q=m[1]?(+m[1]||angka[m[1]]):1;tambah(i,q)}})};r.start()}
+tampil();
+</script></body></html>
