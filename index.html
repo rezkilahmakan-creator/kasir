@@ -1,30 +1,143 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kasir Acil</title>
-<style>body{font-family:sans-serif;padding:10px;background:#eee}button{padding:9px;margin:2px;border:0;border-radius:8px;background:#1976d2;color:#fff}.b{background:#fff;color:#000;border:1px solid #ccc}div.x{background:#fff;border-radius:9px;padding:9px;margin:7px 0}input,select{width:100%;padding:8px;margin:2px 0;box-sizing:border-box}.r{color:red}</style></head><body>
-<h2>Kasir Warung Acil</h2><button style="width:100%;background:#d32f2f" onclick="dg()">🎤 Ucapkan pesanan</button><p id="dt"></p>
-<div class="x" id="br"></div>
-<div class="x"><div id="kr"></div><h3>Total: <span id="tt"></span></h3><select id="mt"><option>Tunai</option><option>QRIS</option><option>Transfer</option></select>
-<input id="ug" type="number" placeholder="Uang dibayar" oninput="tp()">Kembalian: <b id="kb"></b><br><button onclick="by()">✅ Bayar</button><button class="b" onclick="K={};tp()">Kosongkan</button></div>
-<div class="x"><b>Stok</b><div id="st"></div></div>
-<div class="x"><b>Barang baru</b><input id="a" placeholder="Nama"><input id="b" type="number" placeholder="Harga ecer"><input id="c" type="number" placeholder="Harga jual per dus"><input id="d" type="number" placeholder="Modal per dus"><input id="e" type="number" placeholder="Isi per dus"><button onclick="tb()">Simpan</button></div>
-<div class="x" id="lp"></div>
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasir Warung Acil</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:0;padding:10px;background:#f1f3f6;color:#222;font-size:15px}
+h2{margin:4px 0 8px;font-size:20px}h3{margin:0 0 6px;font-size:16px}
+.c{background:#fff;border-radius:12px;padding:10px;margin:8px 0;box-shadow:0 1px 2px #0001}
+button{padding:9px 11px;margin:2px;border:0;border-radius:9px;background:#1565c0;color:#fff;font-size:14px}
+button.l{background:#fff;color:#1565c0;border:1px solid #bcd}button.r{background:#c62828}button.g{background:#2e7d32}
+input,select{width:100%;padding:10px;margin:3px 0;border:1px solid #ccc;border-radius:9px;font-size:15px}
+.row{display:flex;gap:6px;align-items:center}.row>*{flex:1}
+.it{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:6px 0;gap:4px}
+.it b{font-weight:600}.s{color:#777;font-size:12px}.red{color:#c62828}
+#mic{width:100%;padding:16px;font-size:18px;background:#c62828}#mic.on{background:#ff6f00}
+#msg{min-height:18px;font-size:13px;margin-top:4px}.ok{color:#2e7d32}.bad{color:#c62828}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;border-bottom:1px solid #eee;text-align:right}td:first-child,th:first-child{text-align:left}
+details summary{font-weight:600;cursor:pointer;padding:4px 0}
+#tot{font-size:22px;font-weight:700}
+</style></head><body>
+<h2>Kasir Warung Acil</h2>
+<div class="c"><div class="row"><div><span class="s">Pengguna</span><select id="pg"><option>Admin</option><option>Owner</option></select></div><div><span class="s">Kasir jaga</span><select id="ksr"></select></div></div><div class="s" id="tgl"></div></div>
+
+<div class="c">
+<button id="mic" onclick="dengar()">🎤 Ucapkan pesanan</button>
+<div class="row" style="margin-top:6px"><input id="tk" placeholder="atau ketik: surya 12 dua, aqua besar satu, tunai" onkeydown="if(event.key=='Enter')proses(this.value)"><button style="flex:0 0 auto" onclick="proses(tk.value)">OK</button></div>
+<div id="dt" class="s"></div><div id="msg"></div>
+</div>
+
+<div class="c"><h3>Keranjang</h3><div id="kr"></div>
+<div class="row" style="margin-top:6px"><div>Total</div><div id="tot" style="text-align:right"></div></div>
+<select id="mt"><option>Tunai</option><option>QRIS</option><option>Transfer</option></select>
+<input id="ug" type="number" inputmode="numeric" placeholder="Uang dibayar (kosongkan kalau uang pas)" oninput="tp()">
+<div>Kembalian: <b id="kb"></b></div>
+<div class="row"><button class="g" onclick="bayar()">✅ Bayar</button><button class="l" onclick="K=[];tp()">Kosongkan</button></div>
+</div>
+
+<div class="c"><h3>Cari barang</h3><input id="cr" placeholder="Ketik nama barang…" oninput="dl()"><div id="dft"></div></div>
+
+<div class="c"><h3>Rekap hari ini</h3><div id="rk"></div>
+<div class="row"><button class="l" onclick="salin()">📋 Salin rekap</button><button class="l r" style="color:#fff" onclick="batal()">↩ Batalkan transaksi terakhir</button></div>
+<div id="rw" class="s"></div></div>
+
+<div class="c"><details><summary>Stok & data barang</summary>
+<input id="cs" placeholder="Cari barang…" oninput="dstok()"><div id="st"></div>
+<h3 style="margin-top:10px">Tambah barang baru</h3>
+<input id="nn" placeholder="Nama barang (misal: Surya 12)">
+<div class="row"><input id="nk" placeholder="Satuan kecil (bungkus/pcs)"><input id="njk" type="number" placeholder="Harga jual kecil"></div>
+<div class="row"><input id="nmk" type="number" placeholder="Modal satuan kecil"><input id="ni" type="number" placeholder="Isi per slop/dus"></div>
+<div class="row"><input id="nu" placeholder="Satuan besar (slop/dus)"><input id="njb" type="number" placeholder="Harga jual besar"></div>
+<button onclick="tambah()">Simpan barang</button>
+</details></div>
+
 <script>
-let B=JSON.parse(localStorage.B||'[{"n":"Aqua 600","e":3000,"j":46000,"m":45000,"i":24,"s":0},{"n":"Aqua Besar","e":5000,"j":51000,"m":50000,"i":12,"s":0}]'),J=JSON.parse(localStorage.J||'[]'),K={},T=0;
-const R=x=>'Rp'+Math.round(x).toLocaleString('id-ID'),sv=()=>{localStorage.B=JSON.stringify(B);localStorage.J=JSON.stringify(J)},
-N={satu:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9,sepuluh:10},
-H=k=>k[1]=='d'?B[k[0]].j:B[k[0]].e,P=(k,q)=>k[1]=='d'?q*B[k[0]].i:q;
-function tp(){T=0;br.innerHTML=B.map((b,i)=>`${b.n} <button class="b" onclick="ad('${i}e',1)">Ecer ${R(b.e)}</button><button class="b" onclick="ad('${i}d',1)">Dus ${R(b.j)}</button><br>`).join('');
-kr.innerHTML=Object.keys(K).map(k=>{let s=H(k)*K[k];T+=s;return `${B[k[0]].n} ${k[1]=='d'?'dus':'ecer'} x${K[k]} = ${R(s)} <button class="b" onclick="ad('${k}',-1)">−</button><br>`}).join('')||'Kosong';
-tt.textContent=R(T);kb.textContent=R(Math.max(0,(+ug.value||0)-T));
-st.innerHTML=B.map((b,i)=>`<span class="${b.s<b.i?'r':''}">${b.n}: ${b.s} biji</span> <button class="b" onclick="ts(${i})">+Dus</button><button class="b" onclick="if(confirm('Hapus?')){B.splice(${i},1);K={};sv();tp()}">🗑</button><br>`).join('');
-let d=new Date().toDateString(),h=J.filter(x=>new Date(x.w).toDateString()==d),s=f=>h.reduce((a,x)=>a+f(x),0);
-lp.innerHTML=`<b>Hari ini</b>: ${h.length} transaksi<br>Total ${R(s(x=>x.t))}<br>Untung ${R(s(x=>x.u))}`}
-function ad(k,q){K[k]=(K[k]||0)+q;if(K[k]<=0)delete K[k];tp()}
-function by(){if(!T)return;let u=0;for(let k in K){let b=B[k[0]],p=P(k,K[k]);b.s-=p;u+=H(k)*K[k]-p*b.m/b.i}
-J.push({w:Date.now(),t:T,u,m:mt.value});sv();K={};ug.value='';tp();alert('Tersimpan!')}
-function ts(i){let q=+prompt('Tambah berapa dus?','1');if(q>0){B[i].s+=q*B[i].i;sv();tp()}}
-function tb(){if(!a.value||!b.value)return;let x=+e.value||1;B.push({n:a.value,e:+b.value,j:+c.value||b.value*x,m:+d.value||0,i:x,s:0});sv();a.value=b.value=c.value=d.value=e.value='';tp()}
-function dg(){let S=window.SpeechRecognition||window.webkitSpeechRecognition,r=new S();r.lang='id-ID';
-r.onresult=ev=>{let t=ev.results[0][0].transcript.toLowerCase();dt.textContent=t;
-B.forEach((b,i)=>{let m=t.match(new RegExp(b.n.toLowerCase()+'\\s*(\\d+|\\w+)?\\s*(dus)?'));if(m){let q=+m[1]||N[m[1]]||1;ad(i+(m[2]?'d':'e'),q)}})};r.start()}
-tp();
+const DATA=[{"n":"Mangga Biru 15","u":"pak","jb":0,"mb":300000,"i":50,"k":"biji","jk":7000,"mk":6000,"s":0},{"n":"Plastik Kado Biru 45","u":"","jb":0,"mb":0,"i":1,"k":"pak","jk":33000,"mk":32000,"s":0},{"n":"HIT Magic","u":"pak","jb":113000,"mb":112000,"i":12,"k":"biji","jk":10000,"mk":9333,"s":0},{"n":"Kartu Kapal Layar","u":"karton","jb":700000,"mb":690000,"i":48,"k":"biji","jk":16500,"mk":14375,"s":0},{"n":"HS Kretek 12","u":"slop","jb":106000,"mb":105000,"i":10,"k":"bungkus","jk":11000,"mk":10500,"s":0},{"n":"HS Filter Mangga","u":"slop","jb":252000,"mb":250000,"i":10,"k":"bungkus","jk":26000,"mk":25000,"s":0},{"n":"HS Filter Matcha Ice","u":"slop","jb":252000,"mb":250000,"i":10,"k":"bungkus","jk":26000,"mk":25000,"s":0},{"n":"Sampoerna 16","u":"slop","jb":356500,"mb":355500,"i":10,"k":"bungkus","jk":38000,"mk":35550,"s":0},{"n":"Surya 12","u":"slop","jb":260000,"mb":259000,"i":10,"k":"bungkus","jk":27400,"mk":25900,"s":0},{"n":"Surya 16","u":"slop","jb":350000,"mb":349000,"i":10,"k":"bungkus","jk":36400,"mk":34900,"s":0},{"n":"Insta Biasa","u":"slop","jb":233000,"mb":232000,"i":10,"k":"bungkus","jk":24700,"mk":23200,"s":0},{"n":"GGM Besar","u":"slop","jb":186000,"mb":185000,"i":10,"k":"bungkus","jk":20000,"mk":18500,"s":0},{"n":"Camel Ungu 12","u":"slop","jb":186500,"mb":185500,"i":10,"k":"bungkus","jk":21000,"mk":18550,"s":0},{"n":"Chief 16","u":"slop","jb":201000,"mb":200000,"i":10,"k":"bungkus","jk":21500,"mk":20000,"s":0},{"n":"Avolution Merah","u":"slop","jb":439000,"mb":438000,"i":10,"k":"bungkus","jk":45300,"mk":43800,"s":0},{"n":"Samsoe Refil 12","u":"slop","jb":219000,"mb":218000,"i":10,"k":"bungkus","jk":23300,"mk":21800,"s":0},{"n":"Liger","u":"slop","jb":89000,"mb":88000,"i":10,"k":"bungkus","jk":10300,"mk":8800,"s":0},{"n":"Magnum Kretek Kuning","u":"slop","jb":135000,"mb":134000,"i":10,"k":"bungkus","jk":14900,"mk":13400,"s":0},{"n":"On Bold","u":"slop","jb":271000,"mb":270000,"i":10,"k":"bungkus","jk":28500,"mk":27000,"s":0},{"n":"Marlboro Filter Black 12","u":"slop","jb":241000,"mb":240000,"i":10,"k":"bungkus","jk":25500,"mk":24000,"s":0},{"n":"Esse Double Change","u":"slop","jb":446000,"mb":445000,"i":10,"k":"bungkus","jk":46000,"mk":44500,"s":0},{"n":"Esse Punch Pop","u":"slop","jb":351000,"mb":350000,"i":10,"k":"bungkus","jk":36500,"mk":35000,"s":0},{"n":"Esse Double Pop","u":"slop","jb":366000,"mb":365000,"i":10,"k":"bungkus","jk":38000,"mk":36500,"s":0},{"n":"Esse Juicy 16","u":"slop","jb":341000,"mb":340000,"i":10,"k":"bungkus","jk":35500,"mk":34000,"s":0},{"n":"Esse Juicy 20","u":"slop","jb":421000,"mb":420000,"i":10,"k":"bungkus","jk":43500,"mk":42000,"s":0},{"n":"Slava Bold","u":"slop","jb":157000,"mb":156000,"i":10,"k":"bungkus","jk":17100,"mk":15600,"s":0},{"n":"Feroz Mangga","u":"slop","jb":156000,"mb":155000,"i":10,"k":"bungkus","jk":17000,"mk":15500,"s":0},{"n":"Indocoffee Coffeemix","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":796500,"mk":795000,"s":0},{"n":"Nipis Madu","u":"dus","jb":49500,"mb":48000,"i":12,"k":"pcs","jk":5500,"mk":4000,"s":0},{"n":"Gabin Besar","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":241500,"mk":240000,"s":0},{"n":"Sosis Ayam","u":"dus","jb":115500,"mb":114000,"i":6,"k":"box","jk":20500,"mk":19000,"s":0},{"n":"Sosis Sapi","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":115500,"mk":114000,"s":0},{"n":"Madu TJ","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":10000,"mk":8500,"s":0},{"n":"Madu Rasa","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":11500,"mk":10000,"s":0},{"n":"Arta 20","u":"slop","jb":111000,"mb":110000,"i":10,"k":"bungkus","jk":12500,"mk":11000,"s":0},{"n":"In Kretek","u":"slop","jb":109500,"mb":108500,"i":10,"k":"bungkus","jk":12350,"mk":10850,"s":0},{"n":"Panama 16","u":"slop","jb":199000,"mb":198000,"i":10,"k":"bungkus","jk":21300,"mk":19800,"s":0},{"n":"Slava Milo Putih","u":"slop","jb":146000,"mb":145000,"i":10,"k":"bungkus","jk":16000,"mk":14500,"s":0},{"n":"Marlboro Gold","u":"slop","jb":521000,"mb":520000,"i":10,"k":"bungkus","jk":53500,"mk":52000,"s":0},{"n":"Slava Merah","u":"slop","jb":171000,"mb":170000,"i":10,"k":"bungkus","jk":18500,"mk":17000,"s":0},{"n":"Slava Ungu","u":"slop","jb":171000,"mb":170000,"i":10,"k":"bungkus","jk":18500,"mk":17000,"s":0},{"n":"Clasmild 12","u":"slop","jb":221000,"mb":220000,"i":10,"k":"bungkus","jk":23500,"mk":22000,"s":0},{"n":"Sampoerna Hijau","u":"slop","jb":156000,"mb":155000,"i":10,"k":"bungkus","jk":17000,"mk":15500,"s":0},{"n":"Samsu Refil Kecil Kertas","u":"slop","jb":184000,"mb":183000,"i":10,"k":"bungkus","jk":19800,"mk":18300,"s":0},{"n":"Sampoerna 12","u":"slop","jb":262000,"mb":261000,"i":10,"k":"bungkus","jk":27600,"mk":26100,"s":0},{"n":"Marlboro 20","u":"slop","jb":400000,"mb":399000,"i":10,"k":"bungkus","jk":41400,"mk":39900,"s":0},{"n":"Djarum Super Kretek","u":"slop","jb":161000,"mb":160000,"i":10,"k":"bungkus","jk":17500,"mk":16000,"s":0},{"n":"Commodore","u":"slop","jb":266000,"mb":265000,"i":10,"k":"bungkus","jk":28000,"mk":26500,"s":0},{"n":"LA Purple","u":"slop","jb":346000,"mb":345000,"i":10,"k":"bungkus","jk":36000,"mk":34500,"s":0},{"n":"LA Mangga","u":"slop","jb":346000,"mb":345000,"i":10,"k":"bungkus","jk":36000,"mk":34500,"s":0},{"n":"Marlboro 16","u":"slop","jb":321000,"mb":320000,"i":10,"k":"bungkus","jk":33500,"mk":32000,"s":0},{"n":"Sampoerna (isi 50)","u":"slop","jb":391000,"mb":390000,"i":4,"k":"bungkus","jk":99000,"mk":97500,"s":0},{"n":"Bull","u":"slop","jb":285000,"mb":284000,"i":10,"k":"bungkus","jk":29900,"mk":28400,"s":0},{"n":"Lucky Merah","u":"slop","jb":347000,"mb":346000,"i":10,"k":"bungkus","jk":36100,"mk":34600,"s":0},{"n":"Camel Biru","u":"slop","jb":222000,"mb":221000,"i":10,"k":"bungkus","jk":23600,"mk":22100,"s":0},{"n":"Camel Kuning PT9","u":"slop","jb":320000,"mb":319000,"i":10,"k":"bungkus","jk":33400,"mk":31900,"s":0},{"n":"Kuaci Rebo","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":176500,"mk":175000,"s":0},{"n":"Indomie Kari","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":119500,"mk":118000,"s":0},{"n":"Royco Ayam","u":"","jb":0,"mb":0,"i":1,"k":"renteng","jk":6300,"mk":4800,"s":0},{"n":"Ichitan Brown Sugar","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":161500,"mk":160000,"s":0},{"n":"Lasegar Kaleng","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":138500,"mk":137000,"s":0},{"n":"Kopi Das","u":"","jb":0,"mb":0,"i":1,"k":"lapiak","jk":17800,"mk":16300,"s":0},{"n":"Adem Sari Kaleng","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":161500,"mk":160000,"s":0},{"n":"Top Kopi Susu","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":151500,"mk":150000,"s":0},{"n":"Chocolatos Drink Match","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":161500,"mk":160000,"s":0},{"n":"Dunhill 20","u":"slop","jb":389000,"mb":388000,"i":10,"k":"bungkus","jk":40300,"mk":38800,"s":0},{"n":"Milenium","u":"slop","jb":151000,"mb":150000,"i":10,"k":"bungkus","jk":16500,"mk":15000,"s":0},{"n":"Samsu Kuning 12","u":"slop","jb":198000,"mb":197000,"i":10,"k":"bungkus","jk":21200,"mk":19700,"s":0},{"n":"Marlboro Vista","u":"slop","jb":336000,"mb":335000,"i":10,"k":"bungkus","jk":35000,"mk":33500,"s":0},{"n":"76 Apel Royal","u":"slop","jb":154000,"mb":153000,"i":10,"k":"bungkus","jk":16800,"mk":15300,"s":0},{"n":"Dunhill Biru","u":"","jb":0,"mb":0,"i":1,"k":"bungkus","jk":33300,"mk":31800,"s":0},{"n":"Kopi Ginseng","u":"","jb":0,"mb":0,"i":1,"k":"pak","jk":100500,"mk":99000,"s":0},{"n":"Mie Jumbo Biru","u":"dus","jb":89500,"mb":88000,"i":24,"k":"bungkus","jk":5000,"mk":3667,"s":0},{"n":"Daia Renteng","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":58500,"mk":57000,"s":0},{"n":"Merries Renteng XL","u":"dus","jb":199500,"mb":198000,"i":16,"k":"renteng","jk":14000,"mk":12375,"s":0},{"n":"Roma Kelapa","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":230500,"mk":229000,"s":0},{"n":"Frisian Flag Renteng","u":"dus","jb":162500,"mb":161000,"i":20,"k":"renteng","jk":8500,"mk":8050,"s":0},{"n":"Feroz Anggur","u":"slop","jb":156000,"mb":155000,"i":10,"k":"bungkus","jk":17000,"mk":15500,"s":0},{"n":"Sky Merah","u":"slop","jb":153000,"mb":152000,"i":10,"k":"bungkus","jk":16700,"mk":15200,"s":0},{"n":"Arta 16","u":"slop","jb":95000,"mb":94000,"i":10,"k":"bungkus","jk":10900,"mk":9400,"s":0},{"n":"Marlong Motion 16","u":"slop","jb":283000,"mb":282000,"i":10,"k":"bungkus","jk":29700,"mk":28200,"s":0},{"n":"Marlong 12","u":"slop","jb":241000,"mb":240000,"i":10,"k":"bungkus","jk":25500,"mk":24000,"s":0},{"n":"Prima Kertas","u":"slop","jb":136000,"mb":135000,"i":10,"k":"bungkus","jk":15000,"mk":13500,"s":0},{"n":"Djarum 12","u":"slop","jb":240000,"mb":239000,"i":10,"k":"bungkus","jk":25400,"mk":23900,"s":0},{"n":"Insta Semangka","u":"slop","jb":233000,"mb":232000,"i":10,"k":"bungkus","jk":24700,"mk":23200,"s":0},{"n":"Mustang","u":"slop","jb":157000,"mb":156000,"i":10,"k":"bungkus","jk":17100,"mk":15600,"s":0},{"n":"HS Matcha","u":"slop","jb":106000,"mb":105000,"i":10,"k":"bungkus","jk":12000,"mk":10500,"s":0},{"n":"Milku Strawberry","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":39500,"mk":38000,"s":0},{"n":"Beng-Beng","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":38000,"mk":36500,"s":0},{"n":"Beng-Beng Max","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":43500,"mk":42000,"s":0},{"n":"Chocolatos Susu","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":11500,"mk":10000,"s":0},{"n":"Sprite Mini","u":"","jb":0,"mb":0,"i":1,"k":"pak","jk":33500,"mk":32000,"s":0},{"n":"Intermie Goreng","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":54500,"mk":53000,"s":0},{"n":"Gula 5 kg","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":96500,"mk":95000,"s":0},{"n":"Kelapa Cream Coklat","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":63500,"mk":62000,"s":0},{"n":"Bagus","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":16100,"mk":14600,"s":0},{"n":"Tisu Jolly","u":"","jb":0,"mb":0,"i":1,"k":"pak","jk":31500,"mk":30000,"s":0},{"n":"Teh Lambang Kuda","u":"","jb":0,"mb":0,"i":1,"k":"pcs","jk":28000,"mk":26500,"s":0},{"n":"Sosis Campur Merah + Biru","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":95500,"mk":94000,"s":0},{"n":"Mie Jumbo Merah","u":"dus","jb":89500,"mb":88000,"i":24,"k":"bungkus","jk":5000,"mk":3667,"s":0},{"n":"Sukses Goreng Kremez","u":"","jb":0,"mb":0,"i":1,"k":"bungkus","jk":5167,"mk":3667,"s":0},{"n":"Ayeah 500","u":"","jb":0,"mb":0,"i":1,"k":"dus","jk":18500,"mk":17000,"s":0},{"n":"Aqua Besar","u":"dus","jb":51000,"mb":50000,"i":12,"k":"biji","jk":5000,"mk":4167,"s":0},{"n":"Aqua Menengah","u":"dus","jb":45000,"mb":44000,"i":24,"k":"biji","jk":3000,"mk":1833,"s":0}];
+const VER=2;
+function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function sv(){try{localStorage.setItem('WA_B',JSON.stringify(B));localStorage.setItem('WA_J',JSON.stringify(J));localStorage.setItem('WA_K',ksr.value);localStorage.setItem('WA_P',pg.value);localStorage.setItem('WA_V',VER)}catch(e){}}
+let B=ld('WA_V',0)==VER?ld('WA_B',DATA):JSON.parse(JSON.stringify(DATA));
+let J=ld('WA_J',[]),K=[];
+const KASIR=['Wawan','Respi','Kesia','Ica','Asi','Rikel'];
+ksr.innerHTML=KASIR.map(k=>`<option>${k}</option>`).join('');ksr.value=ld('WA_K','Wawan')||'Wawan';ksr.onchange=sv;pg.value=ld('WA_P','Admin')||'Admin';pg.onchange=sv;
+tgl.textContent=new Date().toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'});
+const R=x=>'Rp'+Math.round(x).toLocaleString('id-ID');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// harga & modal per baris: big=true artinya slop/dus
+const harga=(b,big)=>big?b.jb:b.jk, modal=(b,big)=>big?b.mb:b.mk, isi=(b,big)=>big?b.i:1, sat=(b,big)=>big?b.u:b.k;
+function addK(idx,big,q){let x=K.find(y=>y.b==idx&&y.big==big);if(x)x.q+=q;else K.push({b:idx,big,q});K=K.filter(y=>y.q>0);tp()}
+function tp(){let T=0;kr.innerHTML=K.map((x,n)=>{const b=B[x.b],s=harga(b,x.big)*x.q;T+=s;
+ return `<div class="it"><div><b>${esc(b.n)}</b><div class="s">${x.q} ${sat(b,x.big)} × ${R(harga(b,x.big))}</div></div><div>${R(s)}</div><div style="flex:0 0 auto"><button class="l" onclick="K[${n}].q--;K=K.filter(y=>y.q>0);tp()">−</button><button class="l" onclick="K[${n}].q++;tp()">+</button></div></div>`}).join('')||'<span class="s">Kosong</span>';
+ tot.textContent=R(T);const u=+ug.value||0;kb.textContent=u?R(Math.max(0,u-T)):'-';rekap();return T}
+function dl(){const q=cr.value.toLowerCase().trim();if(!q){dft.innerHTML='';return}
+ dft.innerHTML=B.map((b,i)=>[b,i]).filter(([b])=>b.n.toLowerCase().includes(q)).slice(0,25).map(([b,i])=>
+ `<div class="it"><div><b>${esc(b.n)}</b><div class="s ${b.s<=0?'red':''}">stok ${b.s} ${b.k}</div></div><div style="flex:0 0 auto;text-align:right"><button class="l" onclick="addK(${i},false,1)">${b.k} ${R(b.jk)}</button>${b.jb?`<button class="l" onclick="addK(${i},true,1)">${b.u} ${R(b.jb)}</button>`:''}</div></div>`).join('')||'<span class="s">Tidak ketemu</span>'}
+function bayar(metode){const T=tp();if(!T){msg.innerHTML='<span class="bad">Keranjang kosong</span>';return}
+ const m=metode||mt.value;let u=0;const it=K.map(x=>{const b=B[x.b];b.s-=isi(b,x.big)*x.q;u+=(harga(b,x.big)-modal(b,x.big))*x.q;return {n:b.n,q:x.q,s:sat(b,x.big),h:harga(b,x.big)}});
+ J.push({w:Date.now(),k:ksr.value,p:pg.value,m,t:T,u,it});K=[];ug.value='';mt.value='Tunai';sv();tp();dl();dstok();
+ msg.innerHTML=`<span class="ok">✅ Tersimpan: ${R(T)} (${m}) – kasir ${esc(ksr.value)}, dicatat ${esc(pg.value)}</span>`}
+function batal(){const h=hariIni();if(!h.length)return;const x=h[h.length-1];if(!confirm(`Batalkan transaksi ${R(x.t)} (${x.m})?`))return;
+ x.it.forEach(r=>{const b=B.find(b=>b.n==r.n);if(b)b.s+=(r.s==b.u&&b.u?b.i:1)*r.q});J.splice(J.indexOf(x),1);sv();tp();dstok()}
+const hariIni=()=>{const d=new Date().toDateString();return J.filter(x=>new Date(x.w).toDateString()==d)};
+function rekap(){const h=hariIni(),g={};h.forEach(x=>{const r=g[x.k]=g[x.k]||{Tunai:0,QRIS:0,Transfer:0,t:0,u:0,n:0};r[x.m]+=x.t;r.t+=x.t;r.u+=x.u;r.n++});
+ const ks=Object.keys(g);if(!ks.length){rk.innerHTML='<span class="s">Belum ada transaksi hari ini</span>';rw.innerHTML='';return}
+ const S=f=>ks.reduce((a,k)=>a+f(g[k]),0);
+ rk.innerHTML=`<table><tr><th>Kasir</th><th>Cash</th><th>QRIS</th><th>Transfer</th><th>Total</th><th>Untung</th></tr>${ks.map(k=>`<tr><td>${esc(k)}</td><td>${R(g[k].Tunai)}</td><td>${R(g[k].QRIS)}</td><td>${R(g[k].Transfer)}</td><td>${R(g[k].t)}</td><td>${R(g[k].u)}</td></tr>`).join('')}<tr><th>Total</th><th>${R(S(r=>r.Tunai))}</th><th>${R(S(r=>r.QRIS))}</th><th>${R(S(r=>r.Transfer))}</th><th>${R(S(r=>r.t))}</th><th>${R(S(r=>r.u))}</th></tr></table>`;
+ rw.innerHTML='Terakhir: '+h.slice(-5).reverse().map(x=>`${new Date(x.w).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})} ${esc(x.k)} ${R(x.t)} ${x.m}${x.p?' ('+esc(x.p)+')':''}`).join(' · ')}
+function salin(){const h=hariIni();let t=`Rekap ${new Date().toLocaleDateString('id-ID')}\n`;const g={};
+ h.forEach(x=>{const r=g[x.k]=g[x.k]||{Tunai:0,QRIS:0,Transfer:0,it:{}};r[x.m]+=x.t;x.it.forEach(i=>{const key=i.n+' ('+i.s+')';r.it[key]=(r.it[key]||0)+i.q})});
+ for(const k in g)t+=`\n${k}: cash ${g[k].Tunai}, QRIS ${g[k].QRIS}, transfer ${g[k].Transfer}\nTerjual: `+Object.entries(g[k].it).map(([n,q])=>`${n} ${q}`).join(', ')+'\n';
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>msg.innerHTML='<span class="ok">Rekap disalin, tinggal tempel ke Claude</span>').catch(()=>prompt('Salin rekap ini:',t))}
+function dstok(){const q=(cs.value||'').toLowerCase();st.innerHTML=B.map((b,i)=>[b,i]).filter(([b])=>!q||b.n.toLowerCase().includes(q)).map(([b,i])=>
+ `<div class="it"><div><b>${esc(b.n)}</b><div class="s">jual ${R(b.jk)}/${b.k}${b.jb?` · ${R(b.jb)}/${b.u} (isi ${b.i})`:''} · modal ${R(b.mk)}/${b.k}</div><div class="s ${b.s<=0?'red':''}">stok ${b.s} ${b.k}</div></div><div style="flex:0 0 auto"><button class="l" onclick="stokM(${i})">+Stok</button><button class="l" onclick="ubah(${i})">✏️</button><button class="l" onclick="if(confirm('Hapus ${esc(b.n).replace(/'/g,'')}?')){B.splice(${i},1);K=[];sv();tp();dstok()}">🗑</button></div></div>`).join('')}
+function stokM(i){const b=B[i];const q=prompt(`Tambah stok ${b.n}. Angka saja = ${b.k}${b.jb?`, atau tulis misal "2 ${b.u}"`:''}:`,'');if(!q)return;
+ const n=parseFloat(q);if(!(n>0))return;B[i].s+=(b.jb&&q.toLowerCase().includes(b.u)?n*b.i:n);sv();dstok();dl()}
+function ubah(i){const b=B[i];const j=prompt(`Harga jual per ${b.k} untuk ${b.n}:`,b.jk);if(j===null)return;b.jk=+j||b.jk;
+ if(b.jb){const jb=prompt(`Harga jual per ${b.u}:`,b.jb);if(jb!==null)b.jb=+jb||b.jb}sv();dstok();dl();tp()}
+function tambah(){if(!nn.value||!njk.value){alert('Isi nama dan harga jual');return}const i=+ni.value||1;
+ B.push({n:nn.value.trim(),k:nk.value.trim()||'pcs',jk:+njk.value,mk:+nmk.value||0,i,u:njb.value?(nu.value.trim()||'dus'):'',jb:+njb.value||0,mb:(+nmk.value||0)*i,s:0});
+ [nn,nk,njk,nmk,ni,nu,njb].forEach(x=>x.value='');sv();dstok();msg.innerHTML='<span class="ok">Barang ditambahkan</span>'}
+
+// ===== Suara =====
+const SAT={satu:1,se:1,dua:2,tiga:3,empat:4,lima:5,enam:6,tujuh:7,delapan:8,sembilan:9};
+function angka(t){ // ubah kata bilangan jadi angka
+ t=t.toLowerCase().replace(/[-,.!?]/g,' ').replace(/\bse(bungkus|slop|slof|dus|pak|biji|pcs|renteng|box|karton)\b/g,'1 $1')
+  .replace(/\b(slof|selop|selof|slo)\b/g,'slop').replace(/\b(kris|keris|kiris|qris|kyuris)\b/g,'qris').replace(/\b(kes|cash|kontan|tunai)\b/g,'tunai').replace(/\btf\b/g,'transfer');
+ const w=t.split(/\s+/).filter(Boolean),o=[];
+ const U=i=>SAT[w[i]]!=null&&w[i]!='se'?SAT[w[i]]:null;
+ function r999(i){let v=0,ok=false;
+  if(w[i]=='seratus'){v=100;i++;ok=true}else if(U(i)!=null&&w[i+1]=='ratus'){v=U(i)*100;i+=2;ok=true}
+  if(w[i]=='sepuluh'){v+=10;i++;ok=true}else if(w[i]=='sebelas'){v+=11;i++;ok=true}
+  else if(U(i)!=null&&w[i+1]=='belas'){v+=10+U(i);i+=2;ok=true}
+  else if(U(i)!=null&&w[i+1]=='puluh'){v+=U(i)*10;i+=2;ok=true;if(U(i)!=null){v+=U(i);i++}}
+  else if(U(i)!=null){v+=U(i);i++;ok=true}
+  return ok?[v,i]:null}
+ for(let i=0;i<w.length;){let v=null,j=i;
+  if(w[i]=='seribu'){v=1000;j=i+1;const r=r999(j);if(r){v+=r[0];j=r[1]}}
+  else{const r=r999(i);if(r){v=r[0];j=r[1];if(w[j]=='ribu'){v*=1000;j++;const r2=r999(j);if(r2){v+=r2[0];j=r2[1]}}}}
+  if(v!=null){o.push(String(v));i=j}else{o.push(w[i]);i++}}
+ return o}
+const norm=s=>s.toLowerCase().replace(/[-+()]/g,' ').replace(/\s+/g,' ').trim();
+function kunci(){const L=[];const base={};
+ B.forEach((b,i)=>{const f=norm(b.n);L.push({t:f.split(' '),i});const m=f.match(/^(.*\D)\s+\d+$/);if(m){(base[m[1]]=base[m[1]]||[]).push(i)}});
+ for(const k in base){if(base[k].length==1&&!L.some(x=>x.t.join(' ')==k))L.push({t:k.split(' '),i:base[k][0]});else if(base[k].length>1)L.push({t:k.split(' '),amb:base[k]})}
+ return L.sort((a,b)=>b.t.length-a.t.length)}
+function proses(teks){if(!teks)return;dt.textContent='"'+teks+'"';const w=angka(teks),L=kunci();let metode=null,dapat=[],ragu=[],sisa=[];
+ for(let p=0;p<w.length;){
+  if(['tunai','qris','transfer'].includes(w[p])){metode={tunai:'Tunai',qris:'QRIS',transfer:'Transfer'}[w[p]];p++;continue}
+  const m=L.find(x=>x.t.every((t,k)=>w[p+k]==t));
+  if(!m){if(!['dan','sama','terus','lagi','ya','nya'].includes(w[p]))sisa.push(w[p]);p++;continue}
+  p+=m.t.length;let q=1,u=null;
+  for(let k=0;k<2&&p<w.length;k++){if(/^\d+$/.test(w[p])&&q==1&&k<2&&!u){q=+w[p];p++}else if(['slop','dus','pak','karton','box','bungkus','biji','pcs','renteng','lapiak'].includes(w[p])){u=w[p];p++}else break}
+  if(m.amb){ragu.push(m.amb.map(i=>B[i].n).join(' / '));continue}
+  const b=B[m.i],big=!!(u&&b.jb&&u==b.u&&u!=b.k);addK(m.i,big,q);dapat.push(`${b.n} ${q} ${sat(b,big)}`)}
+ let h='';if(dapat.length)h+=`<span class="ok">+ ${esc(dapat.join(', '))}</span><br>`;
+ if(ragu.length)h+=`<span class="bad">Sebut ukurannya: ${esc(ragu.join('; '))}</span><br>`;
+ if(sisa.length&&!dapat.length)h+=`<span class="bad">Tidak dikenali: ${esc(sisa.join(' '))}</span>`;
+ msg.innerHTML=h;tk.value='';
+ if(metode){if(ragu.length){mt.value=metode;msg.innerHTML+='<br><span class="bad">Belum disimpan, lengkapi dulu lalu tekan Bayar</span>'}else if(K.length){mt.value=metode;bayar(metode)}}}
+function dengar(){const S=window.SpeechRecognition||window.webkitSpeechRecognition;if(!S){msg.innerHTML='<span class="bad">Browser ini belum bisa suara. Pakai kolom ketik + mikrofon keyboard.</span>';return}
+ const r=new S();r.lang='id-ID';r.interimResults=false;mic.classList.add('on');mic.textContent='🎙️ Mendengarkan…';
+ r.onresult=e=>proses(e.results[0][0].transcript);r.onerror=e=>msg.innerHTML='<span class="bad">Suara gagal: '+esc(e.error)+'</span>';
+ r.onend=()=>{mic.classList.remove('on');mic.textContent='🎤 Ucapkan pesanan'};r.start()}
+sv();tp();dstok();
 </script></body></html>
